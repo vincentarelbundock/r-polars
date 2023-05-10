@@ -371,6 +371,44 @@ pl$sum = function(...) {
 }
 
 
+#' Cumulatively sum all values
+#' @description  syntactic sugar for starting a expression with cumsum
+#' @name pl_cumsum
+#' @param ...  is a:
+#' If one arg:
+#'  - Series or Expr, same as `column$cumsum()`
+#'  - string, same as `pl$col(column)$cumsum()`
+#'  - numeric, same as `pl$lit(column)$cumsum()`
+#'  - list of strings(column names) or expressions to cumulatively sum horizontally across multiple columns.
+#'
+#' If several args, then wrapped in a list and handled as above.
+#' @return Expr
+#' @examples
+#' df = pl$DataFrame(a = 1:2, b = 3:4, c = 5:6)
+#' df$select(pl$cumsum("a"))
+#' df$with_columns(pl$cumsum("a", "b", "c"))$to_data_frame()
+pl$cumsum = function(...) { #-> Expr | Any:
+  column = list2(...)
+  lc = length(column)
+  stringflag = all(sapply(column, is_string))
+  pcase(
+    lc == 0L,
+    Err("pl$cumsum() needs at least one argument."),
+    lc > 1L && !stringflag,
+    Err("When there are more than one arguments in pl$cumsum(), all arguments must be strings."),
+    lc > 1L && stringflag,
+    Ok(pl$col(unlist(column))$cumsum()),
+    lc == 1L && inherits(column[[1]], "Series") && column[[1]]$len() == 0,
+    Err("The series is empty, so no cumsum value can be returned."),
+    lc == 1L && inherits(column[[1]], c("Series", "LazyFrame", "DataFrame")),
+    Ok(column[[1]]$cumsum()),
+    or_else = Ok(pl$col(column[[1]])$cumsum())
+  ) |>
+  unwrap("in pl$cumsum():")
+}
+
+
+
 #' min across expressions / literals / Series
 #' @description Folds the expressions from left to right, keeping the first non-null value.
 #' @name pl_min

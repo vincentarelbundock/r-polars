@@ -176,6 +176,15 @@ test_that("pl$count", {
 })
 
 
+test_that("pl$cumsum()", {
+  df = pl$DataFrame(a = 1:2, b = 3:4, c = 5:6)
 
+  a = df$select(pl$cumsum("a"))$to_series()$to_vector()
+  b = pl$cumsum(df$select("a")$to_series())$to_vector()
+  expect_equal(a, c(1, 3), ignore_attr = TRUE)
+  expect_equal(b, c(1, 3), ignore_attr = TRUE)
 
-
+  a = df$with_columns(pl$cumsum("a", "b", "c"))$to_data_frame()
+  b = data.frame(apply(df$to_data_frame(), 2, cumsum))
+  expect_equal(a, b, ignore_attr = TRUE)
+})
