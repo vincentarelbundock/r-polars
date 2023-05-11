@@ -188,3 +188,19 @@ test_that("pl$cumsum()", {
   b = data.frame(apply(df$to_data_frame(), 2, cumsum))
   expect_equal(a, b, ignore_attr = TRUE)
 })
+
+
+test_that("pl$any()", {
+  df = pl$DataFrame(
+    "a" = c(TRUE, FALSE, TRUE),
+    "b" = c(FALSE, FALSE, FALSE),
+    "c" = c(FALSE, TRUE, FALSE)
+  )
+  expect_true(pl$any(df$select("a")$to_series()))
+  expect_false(pl$any(df$select("b")$to_series()))
+  a = df$select(pl$any("*"))$to_data_frame()
+  expect_equal(a, data.frame(a = TRUE, b = FALSE, c = TRUE))
+})
+
+
+

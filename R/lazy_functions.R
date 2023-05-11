@@ -548,6 +548,45 @@ pl$var = function(column, ddof = 1) {
 }
 
 
+#' Any
+#' @description  Evaluate a bitwise OR operation.
+#' @name pl_any
+#' @param ...
+#' + Single string: alias for `pl$col(name)$any()``
+#' + Series: alias for `name$any()`
+#' + Otherwise, this function computes the bitwise OR horizontally across multiple columns.
+#' @examples
+#' df = pl$DataFrame(
+#'   "a" = c(TRUE, FALSE, TRUE),
+#'   "b" = c(FALSE, FALSE, FALSE),
+#'   "c" = c(FALSE, TRUE, FALSE)
+#' )
+#' pl$any(df$select("a")$to_series())
+#' df$select(pl$any("*"))$to_data_frame()
+#' 
+pl$any = function(...) {
+  dots = list2(...)
+  lc = length(dots)
+  stringflag = all(sapply(dots, is_string))
+  pcase(
+    # informative errors
+    lc == 0L,
+    Err("At least one argument must be supplied to pl$any()."),
+    lc > 1L && !stringflag,
+    Err("When there are more than one arguments in pl$any(), all arguments must be strings."),
+    lc == 1L && inherits(dots[[1]], "Series") && dots[[1]]$len() == 0,
+    Err("The series is empty, so no any value can be returned."),
+    # known cases
+    lc == 1L && stringflag,
+    Ok(pl$col(dots[[1]])$any()),
+    lc == 1L && inherits(dots[[1]], "Series"),
+    Ok(dots[[1]]$any()),
+    # unknown cases
+    # TODO: multiple strings applies horizontally across columns
+    or_else = Err("pl$any: this input is not supported")
+  ) |>
+  unwrap("in pl$any():")
+}
 
 
 #' Concat the arrays in a Series dtype List in linear time.
