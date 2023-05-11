@@ -203,4 +203,11 @@ test_that("pl$any()", {
 })
 
 
+test_that("pl$quantile()", {
+  df = pl$DataFrame(mtcars)
+  a = df$select(pl$quantile("mpg", .5))$to_data_frame()
+  b = data.frame(mpg = quantile(mtcars$mpg, .5))
+  expect_equal(a, b, ignore_attr = TRUE)
+})
+
 

@@ -712,4 +712,18 @@ pl$struct = function(
 }
 
 
-
+#' Quantile
+#' @description  Syntactic sugar for `pl$col("foo")$quantile(...)`
+#' @param column Column name.
+#' @inherit LazyFrame_quantile
+#' @name pl_quantile
+#' @examples
+#' df = pl$DataFrame(mtcars)
+#' df$select(pl$quantile("mpg", .25))
+pl$quantile = function(column, quantile, interpolation = "nearest") {
+  pcase(
+    is_string(column), Ok(pl$col(column)$quantile(quantile, interpolation)),
+    or_else = Err("pl$quantile: this input is not supported")
+  ) |>
+  unwrap("in pl$quantile():")
+}
